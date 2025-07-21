@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "#": {
+      "item": "twilightforest:transformation_planks"
+    },
+    "-": {
+      "tag": "forge:rods/wooden"
+    }
+  },
+  "pattern": [
+    "###",
+    "###",
+    " - "
+  ],
+  "result": {
+    "count": 3,
+    "item": "twilightforest:transformation_sign"
+  }
+}

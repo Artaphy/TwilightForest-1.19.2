@@ -1,0 +1,91 @@
+{
+  "type": "twilightforest:legacy_landmark",
+  "adjust_structure_elevation": false,
+  "advancements_required": [],
+  "allow_biome_surface_decorations": true,
+  "allow_biome_underground_decorations": false,
+  "ambient_spawns": [],
+  "biomes": "#twilightforest:valid_hollow_hill_biomes",
+  "hint_item": {
+    "Count": 1,
+    "id": "minecraft:written_book",
+    "tag": {
+      "author": "twilightforest.book.author",
+      "pages": [
+        "{\"translate\":\"twilightforest.book.unknown.1\"}",
+        "{\"translate\":\"twilightforest.book.unknown.2\"}"
+      ],
+      "title": "twilightforest.book.unknown",
+      "twilightforest:book": 1
+    }
+  },
+  "hint_mob": "twilightforest:kobold",
+  "labelled_monster_spawns": {
+    "0": [
+      {
+        "type": "twilightforest:redcap",
+        "maxCount": 2,
+        "minCount": 1,
+        "weight": 10
+      },
+      {
+        "type": "twilightforest:redcap_sapper",
+        "maxCount": 2,
+        "minCount": 1,
+        "weight": 1
+      },
+      {
+        "type": "twilightforest:kobold",
+        "maxCount": 4,
+        "minCount": 2,
+        "weight": 10
+      },
+      {
+        "type": "minecraft:skeleton",
+        "maxCount": 3,
+        "minCount": 2,
+        "weight": 10
+      },
+      {
+        "type": "twilightforest:swarm_spider",
+        "maxCount": 4,
+        "minCount": 2,
+        "weight": 10
+      },
+      {
+        "type": "minecraft:spider",
+        "maxCount": 3,
+        "minCount": 1,
+        "weight": 10
+      },
+      {
+        "type": "minecraft:creeper",
+        "maxCount": 2,
+        "minCount": 1,
+        "weight": 10
+      },
+      {
+        "type": "twilightforest:fire_beetle",
+        "maxCount": 1,
+        "minCount": 1,
+        "weight": 5
+      },
+      {
+        "type": "twilightforest:slime_beetle",
+        "maxCount": 1,
+        "minCount": 1,
+        "weight": 5
+      },
+      {
+        "type": "minecraft:witch",
+        "maxCount": 1,
+        "minCount": 1,
+        "weight": 1
+      }
+    ]
+  },
+  "legacy_landmark_start": "medium_hollow_hill",
+  "spawn_overrides": {},
+  "step": "surface_structures",
+  "water_spawns": []
+}

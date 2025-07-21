@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "twilightforest:giant_cobblestone"
+    }
+  ],
+  "result": {
+    "count": 64,
+    "item": "minecraft:cobblestone"
+  }
+}

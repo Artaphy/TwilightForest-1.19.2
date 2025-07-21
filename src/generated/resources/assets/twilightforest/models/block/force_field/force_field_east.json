@@ -1,0 +1,29 @@
+{
+  "parent": "minecraft:block/block",
+  "ambientocclusion": false,
+  "elements": [
+    {
+      "faces": {
+        "east": {
+          "cullface": "east",
+          "emissivity": 15,
+          "texture": "#pane"
+        }
+      },
+      "from": [
+        9,
+        7,
+        7
+      ],
+      "shade": false,
+      "to": [
+        16,
+        9,
+        9
+      ]
+    }
+  ],
+  "textures": {
+    "particle": "#pane"
+  }
+}

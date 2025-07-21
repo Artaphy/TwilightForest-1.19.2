@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "-": {
+      "item": "twilightforest:transformation_slab"
+    },
+    "|": {
+      "tag": "forge:rods/wooden"
+    }
+  },
+  "pattern": [
+    "---",
+    "| |"
+  ],
+  "result": {
+    "count": 3,
+    "item": "twilightforest:transformation_banister"
+  }
+}

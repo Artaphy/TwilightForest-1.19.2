@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "-": {
+      "item": "twilightforest:canopy_slab"
+    }
+  },
+  "pattern": [
+    "---",
+    "   ",
+    "---"
+  ],
+  "result": {
+    "item": "twilightforest:empty_canopy_bookshelf"
+  }
+}
