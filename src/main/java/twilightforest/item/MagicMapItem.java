@@ -26,10 +26,13 @@ import twilightforest.init.TFItems;
 import twilightforest.init.TFLandmark;
 import twilightforest.util.LegacyLandmarkPlacements;
 import twilightforest.world.registration.TFGenerationSettings;
+import twilightforest.TFConfig;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 // [VanillaCopy] super everything, but with appropriate redirections to our own datastructures. finer details noted
 
@@ -106,8 +109,12 @@ public class MagicMapItem extends MapItem {
 	@Override
 	public void update(Level level, Entity viewer, MapItemSavedData data) {
 		if (level.dimension() == data.dimension && viewer instanceof Player && level instanceof ServerLevel serverLevel && TFGenerationSettings.usesTwilightChunkGenerator(serverLevel)) {
+			// 配置开关：如禁用则跳过地标搜索
+			if (!TFConfig.COMMON_CONFIG.enableMagicMapLandmarkSearch.get()) {
+				return;
+			}
 			int biomesPerPixel = 4;
-			int blocksPerPixel = 16; // don't even bother with the scale, just hardcode it
+			int blocksPerPixel = 16;
 			int centerX = data.x;
 			int centerZ = data.z;
 			int viewerX = Mth.floor(viewer.getX() - centerX) / blocksPerPixel + 64;
@@ -130,6 +137,19 @@ public class MagicMapItem extends MapItem {
 				return array;
 			});
 
+			// 地标冷却与缓存
+			int searchCooldown = TFConfig.COMMON_CONFIG.magicMapLandmarkSearchCooldown.get();
+			int searchRadius = TFConfig.COMMON_CONFIG.magicMapLandmarkSearchRadius.get();
+			long now = level.getGameTime();
+			if (data instanceof TFMagicMapData tfData) {
+				if (tfData.lastLandmarkSearchTick != null && now - tfData.lastLandmarkSearchTick < searchCooldown) {
+					// 冷却中，直接返回
+					return;
+				}
+				tfData.lastLandmarkSearchTick = now;
+				tfData.tfDecorations.clear();
+			}
+
 			for (int xPixel = viewerX - viewRadiusPixels + 1; xPixel < viewerX + viewRadiusPixels; ++xPixel) {
 				for (int zPixel = viewerZ - viewRadiusPixels - 1; zPixel < viewerZ + viewRadiusPixels; ++zPixel) {
 					if (xPixel >= 0 && zPixel >= 0 && xPixel < 128 && zPixel < 128) {
@@ -138,14 +158,11 @@ public class MagicMapItem extends MapItem {
 						boolean shouldFuzz = xPixelDist * xPixelDist + zPixelDist * zPixelDist > (viewRadiusPixels - 2) * (viewRadiusPixels - 2);
 
 						ResourceLocation biome = biomes[xPixel * biomesPerPixel + zPixel * biomesPerPixel * 128 * biomesPerPixel];
-
-						// make streams more visible
 						ResourceLocation overBiome = biomes[xPixel * biomesPerPixel + zPixel * biomesPerPixel * 128 * biomesPerPixel + 1];
 						ResourceLocation downBiome = biomes[xPixel * biomesPerPixel + (zPixel * biomesPerPixel + 1) * 128 * biomesPerPixel];
 						biome = overBiome != null && BiomeKeys.STREAM.location().equals(overBiome) ? overBiome : downBiome != null && BiomeKeys.STREAM.location().equals(downBiome) ? downBiome : biome;
 
 						MapColorBrightness colorBrightness = this.getMapColorPerBiome(level, biome);
-
 						MaterialColor mapcolor = colorBrightness.color;
 						int brightness = colorBrightness.brightness;
 
@@ -158,16 +175,18 @@ public class MagicMapItem extends MapItem {
 								data.setDirty();
 							}
 
-							// look for TF features
+							// 地标异步查找
 							int worldX = (centerX / blocksPerPixel + xPixel - 64) * blocksPerPixel;
 							int worldZ = (centerZ / blocksPerPixel + zPixel - 64) * blocksPerPixel;
 							if (LegacyLandmarkPlacements.blockIsInLandmarkCenter(worldX, worldZ)) {
 								byte mapX = (byte) ((worldX - centerX) / (float) blocksPerPixel * 2F);
 								byte mapZ = (byte) ((worldZ - centerZ) / (float) blocksPerPixel * 2F);
-								TFLandmark feature = LegacyLandmarkPlacements.pickLandmarkAtBlock(worldX, worldZ, (ServerLevel) level);
-								TFMagicMapData tfData = (TFMagicMapData) data;
-								tfData.tfDecorations.add(new TFMagicMapData.TFMapDecoration(feature, mapX, mapZ, (byte) 8));
-								//TwilightForestMod.LOGGER.info("Found feature at {}, {}. Placing it on the map at {}, {}", worldX, worldZ, mapX, mapZ);
+								ChunkPos chunk = new ChunkPos(worldX >> 4, worldZ >> 4);
+								LandmarkSearchManager.requestLandmarkAsync(serverLevel, chunk, feature -> {
+									if (data instanceof TFMagicMapData tfData2) {
+										tfData2.tfDecorations.add(new TFMagicMapData.TFMapDecoration(feature, mapX, mapZ, (byte) 8));
+									}
+								});
 							}
 						}
 					}
@@ -272,5 +291,32 @@ public class MagicMapItem extends MapItem {
 			}
 		}
 
+	}
+
+	// 地标异步搜索与缓存管理器
+	private static class LandmarkSearchManager {
+		private static final ExecutorService executor = Executors.newFixedThreadPool(2);
+		private static final ConcurrentHashMap<String, TFLandmark> cache = new ConcurrentHashMap<>();
+
+		/**
+		 * 异步请求地标，key 由世界+区块坐标唯一确定。
+		 * @param level 世界
+		 * @param chunk 区块
+		 * @param callback 结果回调（主线程调用）
+		 */
+		public static void requestLandmarkAsync(ServerLevel level, ChunkPos chunk, Consumer<TFLandmark> callback) {
+			String key = level.dimension().location() + ":" + chunk.x + "," + chunk.z;
+			TFLandmark cached = cache.get(key);
+			if (cached != null) {
+				callback.accept(cached);
+				return;
+			}
+			executor.submit(() -> {
+				TFLandmark result = twilightforest.util.LegacyLandmarkPlacements.pickLandmarkForChunk(chunk.x, chunk.z, level);
+				cache.put(key, result);
+				// 回到主线程
+				level.getServer().execute(() -> callback.accept(result));
+			});
+		}
 	}
 }

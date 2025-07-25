@@ -207,6 +207,20 @@ public class TFConfig {
 						defineInRange("shieldParryTicksArrow", 40, 0, Integer.MAX_VALUE);
 			}
 			builder.pop();
+			builder.comment("Magic Map Landmark Search Settings").push("MagicMap");
+			this.enableMagicMapLandmarkSearch = builder
+				.translation(config + "magicmap_landmark_search")
+				.comment("是否启用魔法地图的地标搜索（关闭可彻底避免卡服）")
+				.define("enableMagicMapLandmarkSearch", true);
+			this.magicMapLandmarkSearchRadius = builder
+				.translation(config + "magicmap_landmark_search_radius")
+				.comment("魔法地图地标搜索的最大半径（区块）")
+				.defineInRange("magicMapLandmarkSearchRadius", 8, 1, 64);
+			this.magicMapLandmarkSearchCooldown = builder
+				.translation(config + "magicmap_landmark_search_cooldown")
+				.comment("魔法地图地标搜索的最小冷却时间（tick）")
+				.defineInRange("magicMapLandmarkSearchCooldown", 40, 1, 1200);
+			builder.pop();
 		}
 
 		public Dimension DIMENSION = new Dimension();
@@ -264,6 +278,10 @@ public class TFConfig {
 			public ForgeConfigSpec.IntValue shieldParryTicks;
 		}
 
+		// Magic Map Landmark Search
+		public ForgeConfigSpec.BooleanValue enableMagicMapLandmarkSearch;
+		public ForgeConfigSpec.IntValue magicMapLandmarkSearchRadius;
+		public ForgeConfigSpec.IntValue magicMapLandmarkSearchCooldown;
 	}
 
 	public static class Client {

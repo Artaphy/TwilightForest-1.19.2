@@ -40,6 +40,9 @@ public class TFMagicMapData extends MapItemSavedData {
 
 	public final Set<TFMapDecoration> tfDecorations = new HashSet<>();
 
+	// 地标异步冷却支持
+	public Long lastLandmarkSearchTick = null;
+
 	public TFMagicMapData(int x, int z, byte scale, boolean trackpos, boolean unlimited, boolean locked, ResourceKey<Level> dim) {
 		super(x, z, scale, trackpos, unlimited, locked, dim);
 	}
